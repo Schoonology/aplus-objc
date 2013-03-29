@@ -92,7 +92,7 @@ enum SGPromiseState {
         return NO;
     }
 
-    if ([aValue isKindOfClass:[SGPromise class]]) {
+    if (aValue && [aValue isKindOfClass:[SGPromise class]]) {
         [aValue then:^id(id aValue, NSError **outError) {
                 [self fulfillWithValue:aValue];
                 return nil;

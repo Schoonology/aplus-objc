@@ -3,7 +3,7 @@
 void runTests() {
     NSLog(@"Started. Ctrl-C to stop.");
 
-    SGPromise *a = [SGPromise empty];
+    SGPromise *a = [SGPromise fulfilled:[NSNumber numberWithInt:42]];
     SGPromise *b = [a then:^id(id value, NSError **error) {
         NSLog(@"A then: %@", value);
 
@@ -32,8 +32,20 @@ void runTests() {
     SGPromise *e = [d then:^id(id value, NSError **error) {
         NSLog(@"D then: %@", value);
 
+        return [SGPromise rejected:[SGPromise reasonWithString:@"E Error"]];
+    }];
+    SGPromise *f = [e then:nil fail:^id(id value, NSError **error) {
+        NSLog(@"E fail: %@", value);
+
+        return *error = [SGPromise reasonWithString:@"F Error"];
+    }];
+    SGPromise *g = [f then:nil fail:nil];
+    SGPromise *h = [g then:nil fail:^id(id value, NSError **error) {
+        NSLog(@"G fail: %@", value);
+
         return nil;
     }];
+    assert(f != g && g != h);
 
     dispatch_async(dispatch_get_main_queue(), ^{
         [a fulfillWithValue:[NSNumber numberWithInt:42]];
