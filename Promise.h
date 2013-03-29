@@ -11,6 +11,7 @@ typedef id (^ PromiseBlock)(id aValue, NSError **outError);
 
 @interface Promise : NSObject
 
++ (instancetype)empty;
 + (instancetype)fulfilled:(id)aValue;
 + (instancetype)rejected:(NSError *)anError;
 
@@ -20,5 +21,7 @@ typedef id (^ PromiseBlock)(id aValue, NSError **outError);
 - (instancetype)then:(PromiseBlock)fulfillment fail:(PromiseBlock)rejection;
 - (instancetype)then:(PromiseBlock)fulfillment;
 - (instancetype)fail:(PromiseBlock)rejection;
+
++ (NSError *)reasonWithString:(NSString *)aString;
 
 @end

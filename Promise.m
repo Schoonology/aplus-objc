@@ -23,6 +23,10 @@ enum PromiseState {
 
 @implementation PromiseChild
 
+@synthesize promise=_promise;
+@synthesize fulfilled=_fulfilled;
+@synthesize rejected=_rejected;
+
 @end
 
 @interface Promise() {
@@ -48,6 +52,10 @@ enum PromiseState {
     }
 
     return self;
+}
+
++ (instancetype)empty {
+    return [[self alloc] init];
 }
 
 + (instancetype)fulfilled:(id)aValue {
@@ -160,7 +168,7 @@ enum PromiseState {
             return;
     }
 
-    NSError *error;
+    NSError *error = nil;
     id result = block(arg, &error);
 
     if (error) {
@@ -168,6 +176,13 @@ enum PromiseState {
     } else {
         [child.promise fulfillWithValue:result];
     }
+}
+
++ (NSError *)reasonWithString:(NSString *)aString {
+    return [NSError errorWithDomain:@"Promise"
+        code:0L
+        userInfo:[NSDictionary dictionaryWithObject:aString forKey:NSLocalizedDescriptionKey]
+    ];
 }
 
 @end
