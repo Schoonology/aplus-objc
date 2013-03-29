@@ -1,27 +1,44 @@
+// # SGPromise.m
 //
-//  Promise.m
+// Copyright (C) 2013 Michael Schoonmaker (michael.r.schoonmaker@gmail.com)
 //
-//  Created by Michael Schoonmaker on 3/29/13.
-//  Copyright (c) 2013 Michael Schoonmaker. All rights reserved.
+// This project is free software released under the MIT/X11 license:
 //
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
-#import "Promise.h"
+#import "SGPromise.h"
 
-enum PromiseState {
+enum SGPromiseState {
     Pending,
     Fulfilled,
     Rejected
 };
 
-@interface PromiseChild : NSObject
+@interface SGPromiseChild : NSObject
 
-@property (strong, nonatomic) Promise *promise;
-@property (strong, nonatomic) PromiseBlock fulfilled;
-@property (strong, nonatomic) PromiseBlock rejected;
+@property (strong, nonatomic) SGPromise *promise;
+@property (strong, nonatomic) SGPromiseBlock fulfilled;
+@property (strong, nonatomic) SGPromiseBlock rejected;
 
 @end
 
-@implementation PromiseChild
+@implementation SGPromiseChild
 
 @synthesize promise=_promise;
 @synthesize fulfilled=_fulfilled;
@@ -29,19 +46,19 @@ enum PromiseState {
 
 @end
 
-@interface Promise() {
-    enum PromiseState state;
+@interface SGPromise() {
+    enum SGPromiseState state;
     id value;
     NSError *reason;
 
     NSMutableArray *children;
 }
 
-- (void)notify:(PromiseChild *)child;
+- (void)notify:(SGPromiseChild *)child;
 
 @end
 
-@implementation Promise
+@implementation SGPromise
 
 - (instancetype)init {
     self = [super init];
@@ -59,13 +76,13 @@ enum PromiseState {
 }
 
 + (instancetype)fulfilled:(id)aValue {
-    Promise *promise = [[Promise alloc] init];
+    SGPromise *promise = [[SGPromise alloc] init];
     [promise fulfillWithValue:aValue];
     return promise;
 }
 
 + (instancetype)rejected:(NSError *)anError {
-    Promise *promise = [[Promise alloc] init];
+    SGPromise *promise = [[SGPromise alloc] init];
     [promise rejectWithReason:anError];
     return promise;
 }
@@ -75,7 +92,7 @@ enum PromiseState {
         return NO;
     }
 
-    if ([aValue isKindOfClass:[Promise class]]) {
+    if ([aValue isKindOfClass:[SGPromise class]]) {
         [aValue then:^id(id aValue, NSError **outError) {
                 [self fulfillWithValue:aValue];
                 return nil;
@@ -90,7 +107,7 @@ enum PromiseState {
     state = Fulfilled;
     value = aValue;
 
-    for (PromiseChild *child in children) {
+    for (SGPromiseChild *child in children) {
         [self notify:child];
     }
 
@@ -105,17 +122,17 @@ enum PromiseState {
     state = Rejected;
     reason = anError;
 
-    for (PromiseChild *child in children) {
+    for (SGPromiseChild *child in children) {
         [self notify:child];
     }
 
     return YES;
 }
 
-- (instancetype)then:(PromiseBlock)fulfillment fail:(PromiseBlock)rejection {
-    PromiseChild *child = [[PromiseChild alloc] init];
+- (instancetype)then:(SGPromiseBlock)fulfillment fail:(SGPromiseBlock)rejection {
+    SGPromiseChild *child = [[SGPromiseChild alloc] init];
 
-    child.promise = [[Promise alloc] init];
+    child.promise = [[SGPromise alloc] init];
     child.fulfilled = fulfillment;
     child.rejected = rejection;
 
@@ -131,16 +148,16 @@ enum PromiseState {
     return child.promise;
 }
 
-- (instancetype)then:(PromiseBlock)fulfillment {
+- (instancetype)then:(SGPromiseBlock)fulfillment {
     return [self then:fulfillment fail:nil];
 }
 
-- (instancetype)fail:(PromiseBlock)rejection {
+- (instancetype)fail:(SGPromiseBlock)rejection {
     return [self then:nil fail:rejection];
 }
 
-- (void)notify:(PromiseChild *)child {
-    PromiseBlock block;
+- (void)notify:(SGPromiseChild *)child {
+    SGPromiseBlock block;
     id arg;
 
     switch (state) {
@@ -179,7 +196,7 @@ enum PromiseState {
 }
 
 + (NSError *)reasonWithString:(NSString *)aString {
-    return [NSError errorWithDomain:@"Promise"
+    return [NSError errorWithDomain:@"SGPromise"
         code:0L
         userInfo:[NSDictionary dictionaryWithObject:aString forKey:NSLocalizedDescriptionKey]
     ];

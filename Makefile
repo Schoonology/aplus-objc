@@ -1,6 +1,11 @@
-build:
+all: tests
+
+tests:
 	mkdir -p build
-	clang Promise.m tests.m -Wall -o build/tests -ObjC -framework Foundation
+	clang SGPromise.m tests.m -Wall -o build/tests -ObjC -framework Foundation
+
+clean:
+	rm -rf build
 
 run:
 	build/tests
