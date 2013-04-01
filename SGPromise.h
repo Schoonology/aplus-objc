@@ -41,4 +41,6 @@ typedef id (^ SGPromiseBlock)(id aValue, NSError **outError);
 
 + (NSError *)reasonWithString:(NSString *)aString;
 
++ (instancetype)map:(NSArray *)items usingBlock:(SGPromiseBlock)block;
+
 @end

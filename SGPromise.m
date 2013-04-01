@@ -202,4 +202,43 @@ enum SGPromiseState {
     ];
 }
 
++ (instancetype)map:(NSArray *)items usingBlock:(SGPromiseBlock)block {
+    NSMutableArray __block *results = [NSMutableArray arrayWithCapacity:items];
+    SGPromise __block *promise = [SGPromise empty];
+    int __block left = [items count];
+
+    NSError *error;
+
+    for (int index = 0; index < [items count]; index++) {
+        int __block ptIndex = index;
+
+        // Reserve a spot in the results array
+        // Remember - elements cannot be `nil`!
+        [results addObject:[NSNull null]];
+
+        [[SGPromise fulfilled:block(items[index], &error)]
+            then:^id(id value, NSError **error) {
+                [results setObject:value atIndexedSubscript:ptIndex];
+
+                left--;
+                if (left == 0) {
+                    [promise fulfillWithValue:results];
+                }
+
+                return nil;
+            }
+            fail:^id(id value, NSError **error) {
+                [promise rejectWithReason:value];
+                return nil;
+            }
+        ];
+
+        if (error) {
+            [promise rejectWithReason:error];
+        }
+    }
+
+    return promise;
+}
+
 @end
